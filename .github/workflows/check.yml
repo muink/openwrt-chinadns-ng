@@ -15,11 +15,16 @@ jobs:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
-
-      - uses: EkkoG/openwrt-packages-version-checker@main
-        env:
-          COMMIT_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          REPO: zfl9/chinadns-ng
-          BRANCH: master
-          SOURCE_URL: https://github.com/zfl9/chinadns-ng/archive/refs/tags/{{version}}.tar.gz
           
+      - name: Check new version
+        shell: bash
+        run: |
+          ./update.sh
+
+      - name: Commit and push
+        run: |
+          git config --local user.name "GitHub Action"
+          git config --local user.email "actions-user@users.noreply.github.com"
+          git add Makefile
+          git diff-index --cached --quiet HEAD Makefile \
+          || (git commit -m "update to $(sed -En 's|^\s*PKG_VERSION\s*:=(.*)|\1|p' Makefile)" && git push)
